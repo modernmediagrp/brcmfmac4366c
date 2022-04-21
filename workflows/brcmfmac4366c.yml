@@ -1,0 +1,99 @@
+# By PuXiongfei
+
+name: brcmfmac4366c
+
+on:
+  workflow_dispatch:
+    inputs:
+      firmware:
+        description: "Firmware zip url"
+        required: true
+        default: "https://dlsvr04.asus.com.cn/pub/ASUS/wireless/RT-AC88U/FW_RT_AC88U_300438648260.zip"
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Initialization environment
+        run: |
+          echo "Free space:"
+          df -hT
+          sudo timedatectl set-timezone "$TZ"
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install p7zip xxd binwalk binutils
+
+      - name: Download firmware
+        id: download
+        run: |
+          wget -O firmware.zip ${{ github.event.inputs.tags }}
+          ls -la
+          echo "::set-output name=status::success"
+
+      - name: Get dhd.ko
+        id: dhd_ko
+        if: ${{ steps.download.outputs.status == 'success' && !cancelled() }}
+        run: |
+          find ./ -name "*.trx" -exec 7z x {} lib/modules/2.6.36.4brcmarm/kernel/drivers/net/dhd/dhd.ko ;
+          ls -la
+          cp -a lib/modules/2.6.36.4brcmarm/kernel/drivers/net/dhd/dhd.ko ./
+          ls -la
+          echo "::set-output name=status::success"
+
+      - name: Get OFFSET
+        id: offset
+        if: ${{ steps.dhd_ko.outputs.status == 'success' && !cancelled() }}
+        run: |
+          binwalk -R "\x00\xf2\x3e\xb8\x04\xf2" dhd.ko
+          OFFSET=$(binwalk -R "\x00\xf2\x3e\xb8\x04\xf2" dhd.ko | sed '4!d' | awk '{print $1}')
+          echo "OFFSET=${OFFSET}" >> $GITHUB_ENV
+          echo "::set-output name=status::success"
+
+      - name: Get SIZE
+        id: size
+        if: ${{ steps.offset.outputs.status == 'success' && !cancelled() }}
+        run: |
+          readelf -s dhd.ko | grep OBJECT
+          SIZE=$(readelf -s dhd.ko | grep dlarray_4366c0 | awk '{print $3}' | xargs printf "%d\n")
+          echo "SIZE=${SIZE}" >> $GITHUB_ENV
+          echo "::set-output name=status::success"
+
+      - name: Get brcmfmac4366c-pcie.bin
+        id: bin
+        if: ${{ steps.size.outputs.status == 'success' && !cancelled() }}
+        run: |
+          dd if=dhd.ko skip=${OFFSET} ibs=1 count=${SIZE} of=brcmfmac4366c-pcie.bin
+          strings brcmfmac4366c-pcie.bin | grep Version
+          echo "BIN_PATH=${PWD}/brcmfmac4366c-pcie.bin" >> $GITHUB_ENV
+          echo "::set-output name=status::success"
+
+      - name: Generate release tag
+        id: tag
+        if: ${{ steps.bin.outputs.status == 'success' && !cancelled() }}
+        run: |
+          echo "${{ github.event.inputs.tags }}" | awk -F "/" '{print $NF}' >> $GITHUB_ENV
+          echo "::set-output name=status::success"
+
+      - name: Upload u-boot to release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.tag.outputs.status == 'success' && !cancelled() }}
+        with:
+          tag_name: ${{ env.release_tag }}
+          files: ${{ env.BIN_PATH }}
+
+      - name: Delete old Releases
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 1
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          retain_days: 0
+          keep_minimum_runs: 1
