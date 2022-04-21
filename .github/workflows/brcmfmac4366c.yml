@@ -31,7 +31,6 @@ jobs:
         run: |
           wget -O firmware.zip ${{ github.event.inputs.firmware }}
           7z x firmware.zip
-          ls -la
           echo "::set-output name=status::success"
 
       - name: Get dhd.ko
@@ -40,9 +39,7 @@ jobs:
         run: |
           mkdir trx
           find ./ -name "*.trx" -exec 7z x -o./trx {} \;
-          ls -la ./trx
           find ./trx -name "dhd.ko" -exec cp -a {} ./ \;
-          ls -la
           echo "::set-output name=status::success"
 
       - name: Get OFFSET
@@ -76,14 +73,14 @@ jobs:
         id: tag
         if: ${{ steps.bin.outputs.status == 'success' && !cancelled() }}
         run: |
-          echo "${{ github.event.inputs.firmware }}" | awk -F "/" '{print $NF}' >> $GITHUB_ENV
+          echo "${{ github.event.inputs.firmware }}" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}' >> $GITHUB_ENV
           echo "::set-output name=status::success"
 
-      - name: Upload u-boot to release
+      - name: Upload brcmfmac4366c-pcie.bin to release
         uses: softprops/action-gh-release@v1
         if: ${{ steps.tag.outputs.status == 'success' && !cancelled() }}
         with:
-          tag_name: ${{ env.release_tag }}
+          tag_name: ${{ env.ZIP_NAME }}
           files: ${{ env.BIN_PATH }}
 
       - name: Delete old Releases
