@@ -37,9 +37,10 @@ jobs:
         id: dhd_ko
         if: ${{ steps.download.outputs.status == 'success' && !cancelled() }}
         run: |
-          find ./ -name "*.trx" -exec 7z x {} lib/modules/2.6.36.4brcmarm/kernel/drivers/net/dhd/dhd.ko \;
-          ls -la
-          cp -a lib/modules/2.6.36.4brcmarm/kernel/drivers/net/dhd/dhd.ko ./
+          mkdir trx
+          find ./ -name "*.trx" -exec 7z x -o./trx {} \;
+          ls -la ./trx
+          find ./trx -name "dhd.ko" -exec cp -a {} ./ \;
           ls -la
           echo "::set-output name=status::success"
 
