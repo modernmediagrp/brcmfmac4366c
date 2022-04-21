@@ -30,6 +30,7 @@ jobs:
         id: download
         run: |
           wget -O firmware.zip ${{ github.event.inputs.firmware }}
+          7z x firmware.zip
           ls -la
           echo "::set-output name=status::success"
 
