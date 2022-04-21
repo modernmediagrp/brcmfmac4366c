@@ -73,7 +73,7 @@ jobs:
         id: tag
         if: ${{ steps.bin.outputs.status == 'success' && !cancelled() }}
         run: |
-          ZIP_NAME=${{ github.event.inputs.firmware }}" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}'
+          ZIP_NAME=$(echo "${{ github.event.inputs.firmware }}" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
           echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
           echo "::set-output name=status::success"
 
