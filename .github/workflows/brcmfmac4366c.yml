@@ -29,8 +29,8 @@ jobs:
         run: |
           wget -O firmware.zip ${{ github.event.inputs.firmware }}
           7z x firmware.zip
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          # echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Get dhd.ko
         id: dhd_ko
@@ -39,8 +39,8 @@ jobs:
           mkdir trx
           find ./ -name "*.trx" -exec 7z x -o./trx {} \;
           find ./trx -name "dhd.ko" -exec cp -a {} ./ \;
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          # echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Get OFFSET
         id: offset
@@ -49,8 +49,8 @@ jobs:
           binwalk -R "\x00\xf2\x3e\xb8\x04\xf2" dhd.ko
           OFFSET=$(binwalk -R "\x00\xf2\x3e\xb8\x04\xf2" dhd.ko | sed '4!d' | awk '{print $1}')
           echo "OFFSET=${OFFSET}" >> $GITHUB_ENV
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          # echo "name=status::success" >> $GITHUB_OUTPUT
           
       - name: Get SIZE
         id: size
@@ -59,8 +59,8 @@ jobs:
           readelf -s dhd.ko | grep OBJECT
           SIZE=$(readelf -s dhd.ko | grep dlarray_4366c0 | awk '{print $3}' | xargs printf "%d\n")
           echo "SIZE=${SIZE}" >> $GITHUB_ENV
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          #echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Get brcmfmac4366c-pcie.bin
         id: bin
@@ -69,8 +69,8 @@ jobs:
           dd if=dhd.ko skip=${OFFSET} ibs=1 count=${SIZE} of=brcmfmac4366c-pcie.bin
           strings brcmfmac4366c-pcie.bin | grep Version
           echo "BIN_PATH=${PWD}/brcmfmac4366c-pcie.bin" >> $GITHUB_ENV
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          # echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Generate release tag
         id: tag
@@ -78,8 +78,8 @@ jobs:
         run: |
           ZIP_NAME=$(echo "${{ github.event.inputs.firmware }}" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
           echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
-          # echo "::set-output name=status::success"
-          echo "name=status::success" >> $GITHUB_OUTPUT
+          echo "::set-output name=status::success"
+          # echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Upload brcmfmac4366c-pcie.bin to release
         uses: softprops/action-gh-release@v1
@@ -89,7 +89,7 @@ jobs:
           files: ${{ env.BIN_PATH }}
 
       - name: Delete old Releases
-        uses: dev-drprasad/delete-older-releases@v0.2.0
+        uses: dev-drprasad/delete-older-releases@v0.2.1
         with:
           keep_latest: 1
           delete_tags: true
@@ -97,7 +97,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
+        uses: Mattraks/delete-workflow-runs@v2.0.3
         with:
           retain_days: 0
           keep_minimum_runs: 1
