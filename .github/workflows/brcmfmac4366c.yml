@@ -29,7 +29,8 @@ jobs:
         run: |
           wget -O firmware.zip ${{ github.event.inputs.firmware }}
           7z x firmware.zip
-          echo "::set-output name=status::success"
+          # echo "::set-output name=status::success"
+          echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Get dhd.ko
         id: dhd_ko
@@ -38,7 +39,8 @@ jobs:
           mkdir trx
           find ./ -name "*.trx" -exec 7z x -o./trx {} \;
           find ./trx -name "dhd.ko" -exec cp -a {} ./ \;
-          echo "::set-output name=status::success"
+          # echo "::set-output name=status::success"
+          echo "name=status::success" >> $GITHUB_OUTPUT
 
       - name: Get OFFSET
         id: offset
@@ -49,6 +51,7 @@ jobs:
           echo "OFFSET=${OFFSET}" >> $GITHUB_ENV
           # echo "::set-output name=status::success"
           echo "name=status::success" >> $GITHUB_OUTPUT
+          
       - name: Get SIZE
         id: size
         if: ${{ steps.offset.outputs.status == 'success' && !cancelled() }}
