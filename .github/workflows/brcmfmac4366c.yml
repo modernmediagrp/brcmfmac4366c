@@ -1,5 +1,3 @@
-# By PuXiongfei
-
 name: brcmfmac4366c
 
 on:
@@ -8,10 +6,10 @@ on:
       firmware:
         description: "Firmware zip url"
         required: true
-        default: "https://dlsvr04.asus.com.cn/pub/ASUS/wireless/RT-AC88U/FW_RT_AC88U_300438648260.zip"
-
+        #default: "https://dlsvr04.asus.com.cn/pub/ASUS/wireless/RT-AC88U/FW_RT_AC88U_300438648260.zip"
+        default: "https://dlcdnets.asus.com/pub/ASUS/wireless/RT-AC88U/FW_RT_AC88U_300438648260.zip"
 env:
-  TZ: Asia/Shanghai
+  TZ: America/Los_Angeles
 
 jobs:
   brcmfmac4366c:
